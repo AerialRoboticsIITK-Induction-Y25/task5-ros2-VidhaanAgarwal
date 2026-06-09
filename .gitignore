@@ -1,0 +1,9 @@
+part1/build/
+part1/install/
+part1/log/
+fleet_ws/build/
+fleet_ws/install/
+fleet_ws/log/
+*.o
+*.pyc
+docker_build.log
