@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   run-autograding-tests:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     if: github.actor != 'github-classroom[bot]'
     env:
       DEBIAN_FRONTEND: noninteractive
@@ -34,21 +34,21 @@ jobs:
             2>&1 | tail -5
           echo "C++ tools installed: $(g++ --version | head -1)"
 
-      - name: Setup — Install ROS 2 Humble
+      - name: Setup — Install ROS 2 Jazzy
         run: |
           sudo apt-get install -y -qq curl gnupg
           sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key \
             -o /usr/share/keyrings/ros-archive-keyring.gpg
           echo "deb [arch=$(dpkg --print-architecture) \
             signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] \
-            http://packages.ros.org/ros2/ubuntu jammy main" \
+            http://packages.ros.org/ros2/ubuntu noble main" \
             | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
           sudo apt-get update -qq
           sudo apt-get install -y -qq \
-            ros-humble-ros-base \
+            ros-jazzy-ros-base \
             python3-colcon-common-extensions \
             2>&1 | tail -5
-          echo "ROS 2 Humble installed: $(source /opt/ros/humble/setup.bash && ros2 --version)"
+          echo "ROS 2 Jazzy installed: $(source /opt/ros/jazzy/setup.bash && ros2 --version)"
 
       # ════════════════════════════════════════════════════════════
       # PART 1 — C++ OOPs Tests (35 points total)
@@ -62,19 +62,7 @@ jobs:
           command: >
             bash -c '
             PASS=true;
-            for f in
-              part1/CMakeLists.txt
-              part1/include/vehicle.hpp
-              part1/include/drone.hpp
-              part1/include/mission_drone.hpp
-              part1/include/autonomous_drone.hpp
-              part1/include/drone_exceptions.hpp
-              part1/src/vehicle.cpp
-              part1/src/drone.cpp
-              part1/src/mission_drone.cpp
-              part1/src/autonomous_drone.cpp
-              part1/src/main.cpp;
-            do
+            for f in part1/CMakeLists.txt part1/include/vehicle.hpp part1/include/drone.hpp part1/include/mission_drone.hpp part1/include/autonomous_drone.hpp part1/include/drone_exceptions.hpp part1/src/vehicle.cpp part1/src/drone.cpp part1/src/mission_drone.cpp part1/src/autonomous_drone.cpp part1/src/main.cpp; do
               if [ -f "$f" ]; then echo "FOUND: $f";
               else echo "MISSING: $f"; PASS=false; fi;
             done;
@@ -204,14 +192,7 @@ jobs:
           command: >
             bash -c '
             PASS=true;
-            for f in
-              fleet_ws/src/drone_fleet/package.xml
-              fleet_ws/src/drone_fleet/CMakeLists.txt
-              fleet_ws/src/drone_fleet/src/drone_node.cpp
-              fleet_ws/src/drone_fleet/src/fleet_manager.cpp
-              fleet_ws/src/drone_fleet/src/health_monitor.cpp
-              fleet_ws/src/drone_fleet/launch/fleet.launch.py;
-            do
+            for f in fleet_ws/src/drone_fleet/package.xml fleet_ws/src/drone_fleet/CMakeLists.txt fleet_ws/src/drone_fleet/src/drone_node.cpp fleet_ws/src/drone_fleet/src/fleet_manager.cpp fleet_ws/src/drone_fleet/src/health_monitor.cpp fleet_ws/src/drone_fleet/launch/fleet.launch.py; do
               if [ -f "$f" ]; then echo "OK: $f";
               else echo "MISSING: $f"; PASS=false; fi;
             done;
@@ -253,7 +234,7 @@ jobs:
           test-name: "P2-3 ROS 2 colcon Build"
           command: >
             bash -c '
-            source /opt/ros/humble/setup.bash 2>/dev/null;
+            source /opt/ros/jazzy/setup.bash 2>/dev/null;
             [ ! -d "fleet_ws" ] && { echo "NO_FLEET_WS_DIR"; exit 0; };
             cd fleet_ws;
             BUILD_OUTPUT=$(colcon build --packages-select drone_fleet 2>&1);
@@ -404,9 +385,9 @@ jobs:
             HAS_COLCON=$(grep -c "colcon build" "$DF" || echo 0);
             HAS_ENTRYPOINT=$(grep -c "ENTRYPOINT\|entrypoint" "$DF" || echo 0);
             HAS_COPY_FROM=$(grep -c "COPY --from" "$DF" || echo 0);
-            HAS_ROS_BASE=$(grep -c "ros:humble" "$DF" || echo 0);
+            HAS_ROS_BASE=$(grep -c "ros:jazzy" "$DF" || echo 0);
             echo "stages=$STAGE_COUNT builder=$HAS_BUILDER runtime=$HAS_RUNTIME colcon=$HAS_COLCON";
-            echo "entrypoint=$HAS_ENTRYPOINT copy_from=$HAS_COPY_FROM ros_humble=$HAS_ROS_BASE";
+            echo "entrypoint=$HAS_ENTRYPOINT copy_from=$HAS_COPY_FROM ros_jazzy=$HAS_ROS_BASE";
             if [ "$STAGE_COUNT" -ge 2 ] && [ "$HAS_COLCON" -gt 0 ] && [ "$HAS_COPY_FROM" -gt 0 ]; then
               echo "DOCKERFILE_MULTISTAGE_OK";
             fi'
@@ -450,8 +431,7 @@ jobs:
           command: >
             bash -c '
             [ ! -f "fleet_ws/Dockerfile" ] && { echo "MISSING_DOCKERFILE"; exit 0; };
-            cd fleet_ws;
-            BUILD_OUTPUT=$(docker build -t drone_fleet_ci_test:latest . 2>&1);
+            BUILD_OUTPUT=$(docker build -f fleet_ws/Dockerfile -t drone_fleet_ci_test:latest . 2>&1);
             STATUS=$?;
             echo "$BUILD_OUTPUT" | tail -10;
             if [ $STATUS -eq 0 ]; then
