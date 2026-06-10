@@ -1,34 +1,3 @@
-Here is the complete, final autograder script with the Docker Build Context issue fixed. You can copy and paste this entire block directly into your `.github/workflows/classroom.yml` file.
-
-```yaml
-name: Autograding Tests
-on:
-  - push
-  - workflow_dispatch
-  - repository_dispatch
-permissions:
-  checks: write
-  actions: read
-  contents: read
-
-jobs:
-  run-autograding-tests:
-    runs-on: ubuntu-24.04
-    if: github.actor != 'github-classroom[bot]'
-    env:
-      DEBIAN_FRONTEND: noninteractive
-
-    steps:
-      # ════════════════════════════════════════════════════════════
-      # SETUP — Install all tools needed before any grading begins
-      # 
-
-[ignoring loop detection]
-Here is the complete, final autograder script with the Docker Build Context issue fixed. You can copy and paste this entire block directly into your `.github/workflows/classroom.yml` (or whatever your grading workflow file is named). 
-
-The only modification is on **line 253/254**, where `cd fleet_ws;` was removed and `docker build` was updated to run from the root context.
-
-```yaml
 name: Autograding Tests
 on:
   - push
@@ -567,4 +536,3 @@ jobs:
             p3-dockerfile-structure,
             p3-runsh-flags,
             p3-docker-build
-```
